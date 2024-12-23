@@ -30,3 +30,4 @@ client.subscribe(MQTT_TOPIC)
 
 # Бесконечный цикл
 client.loop_forever()
+  
