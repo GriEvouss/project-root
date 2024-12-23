@@ -18,6 +18,7 @@ def on_message(client, userdata, message):
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
 
+        # Если сообщение приходит с топика "status", обновляем статус устройства
         if topic.endswith("/status"):
             device_id = topic.split("/")[1]
             cursor.execute(
@@ -29,6 +30,7 @@ def on_message(client, userdata, message):
                 """,
                 (device_id, payload)
             )
+        # Если сообщение другого типа, можно добавлять логику обработки здесь
 
         conn.commit()
         cursor.close()
