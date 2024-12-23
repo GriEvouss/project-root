@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: database
+  name: postgres-database
 spec:
   replicas: 1
   selector:
@@ -13,7 +13,7 @@ spec:
         app: database
     spec:
       containers:
-      - name: database
+      - name: postgres
         image: postgres:13
         env:
         - name: POSTGRES_USER

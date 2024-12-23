@@ -6,15 +6,14 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: mqtt-broker
+      app: mqtt
   template:
     metadata:
       labels:
-        app: mqtt-broker
+        app: mqtt
     spec:
       containers:
-      - name: mqtt-broker
-        image: lynxwd/mqtt-broker:latest
+      - name: mqtt
+        image: eclipse-mosquitto:2.0.15
         ports:
         - containerPort: 1883
-        - containerPort: 9001
