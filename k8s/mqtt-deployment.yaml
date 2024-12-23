@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: mqtt-broker
-        image: mqtt-broker:latest
+        image: lynxwd/mqtt-broker:latest
         ports:
         - containerPort: 1883
         - containerPort: 9001

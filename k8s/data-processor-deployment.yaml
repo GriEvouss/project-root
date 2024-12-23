@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: data-processor
-        image: data-processor:latest
+        image: lynxwd/data-processor:latest
         env:
         - name: MQTT_BROKER
           value: mqtt-broker
