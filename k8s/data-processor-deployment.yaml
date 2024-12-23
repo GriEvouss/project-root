@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: data-processor
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: data-processor
+  template:
+    metadata:
+      labels:
+        app: data-processor
+    spec:
+      containers:
+      - name: data-processor
+        image: data-processor:latest
+        env:
+        - name: MQTT_BROKER
+          value: mqtt-broker
+        - name: DATABASE_URL
+          value: postgresql://admin:password@database:5432/industrial_db
+        ports:
+        - containerPort: 5000
