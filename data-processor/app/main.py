@@ -1,7 +1,7 @@
 import os
 import psycopg2
 import paho.mqtt.client as mqtt
-from flask import Flask, jsonify
+from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
 
@@ -11,33 +11,54 @@ MQTT_BROKER = os.environ.get("MQTT_BROKER", "mqtt-broker")
 # Обработчик сообщений
 def on_message(client, userdata, message):
     payload = message.payload.decode('utf-8')
-    print(f"Получено сообщение: {payload}")
+    topic = message.topic
+    print(f"Получено сообщение: {payload} из топика: {topic}")
+
     try:
         conn = psycopg2.connect(DATABASE_URL)
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO messages (content) VALUES (%s)", (payload,))
+
+        # Если сообщение приходит с топика status, обновляем статус устройства
+        if topic.endswith("/status"):
+            device_id = topic.split("/")[1]
+            cursor.execute(
+                "INSERT INTO devices (device_id, status, last_updated) VALUES (%s, %s, NOW()) "
+                "ON CONFLICT (device_id) DO UPDATE SET status = EXCLUDED.status, last_updated = NOW();",
+                (device_id, payload)
+            )
+        # Если сообщение другого типа, можно добавлять логику обработки здесь
+
         conn.commit()
         cursor.close()
         conn.close()
     except Exception as e:
         print(f"Ошибка записи в базу: {e}")
 
-# Настройка MQTT
+# MQTT-клиент
 client = mqtt.Client()
 client.on_message = on_message
 client.connect(MQTT_BROKER, 1883, 60)
-client.subscribe("industrial/devices")
+client.subscribe("industrial/#")
 client.loop_start()
 
-@app.route('/messages', methods=['GET'])
-def get_messages():
+# Веб-интерфейс
+@app.route('/')
+def index():
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM messages;")
-    rows = cursor.fetchall()
+    cursor.execute("SELECT * FROM devices;")
+    devices = cursor.fetchall()
     cursor.close()
     conn.close()
-    return jsonify(rows)
+    return render_template('devices.html', devices=devices)
+
+@app.route('/send-command', methods=['POST'])
+def send_command():
+    data = request.json
+    device_id = data['device_id']
+    command = data['command']
+    client.publish(f"industrial/{device_id}/command", command)
+    return jsonify({"status": "Command sent"})
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

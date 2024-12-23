@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Devices</title>
+</head>
+<body>
+    <h1>Devices</h1>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>Status</th>
+            <th>Last Updated</th>
+            <th>Send Command</th>
+        </tr>
+        {% for device in devices %}
+        <tr>
+            <td>{{ device[1] }}</td>
+            <td>{{ device[2] }}</td>
+            <td>{{ device[4] }}</td>
+            <td>
+                <form action="/send-command" method="POST">
+                    <input type="hidden" name="device_id" value="{{ device[1] }}">
+                    <input type="text" name="command" placeholder="Enter command">
+                    <button type="submit">Send</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
