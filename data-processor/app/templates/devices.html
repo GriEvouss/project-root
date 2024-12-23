@@ -24,12 +24,18 @@
                     <td id="status-{{ device[1] }}">{{ device[2] }}</td>
                     <td>
                         <select id="command-{{ device[1] }}" class="form-select">
-                            <option value="turn_on">Turn On</option>
-                            <option value="turn_off">Turn Off</option>
-                            <option value="restart">Restart</option>
-                            <option value="send-message">Send Message</option>
+                            <option value="turn_on">Включить</option>
+                            <option value="turn_off">Выключить</option>
+                            <option value="restart">Перезапустить</option>
+                            <option value="send-message">Отправить сообщение</option>
                         </select>
-                        <button class="btn btn-primary mt-2" onclick="sendCommand('{{ device[1] }}')">Send Command</button>
+                        <input type="text" id="message-{{ device[1] }}" class="form-control mt-2" placeholder="Введите сообщение" style="display: none;">
+                        <button class="btn btn-primary mt-2" onclick="sendCommand('{{ device[1] }}')">Отправить команду</button>
+                    </td>
+                    <td>
+                        <!-- Иконка корзины -->
+                        <img src="i.webp" alt="Удалить устройство" class="icon" style="cursor: pointer; width: 30px;" 
+                            onclick="deleteDevice('{{ device[1] }}')" title="Удалить устройство">
                     </td>
                 </tr>
                 {% endfor %}
@@ -41,26 +47,29 @@
     <script>
         function sendCommand(deviceId) {
             const command = document.getElementById(`command-${deviceId}`).value;
+            const messageInput = document.getElementById(`message-${deviceId}`);
+            const message = messageInput ? messageInput.value : '';
+    
             fetch('/send-command', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ device_id: deviceId, command: command })
+                body: JSON.stringify({ device_id: deviceId, command: command, message: message })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.error) {
-                    alert(`Error: ${data.error}`);
+                    alert(`Ошибка: ${data.error}`);
                 } else {
-                    alert(`Command sent: ${data.command}`);
+                    alert(`Команда отправлена: ${data.command}`);
                     // Обновляем статус устройства на странице
                     updateDeviceStatusOnPage(deviceId, data.new_status);
                 }
             })
-            .catch(err => console.error('Error:', err));
+            .catch(err => console.error('Ошибка:', err));
         }
-
+    
         function updateDeviceStatusOnPage(deviceId, newStatus) {
             const statusElement = document.getElementById(`status-${deviceId}`);
             if (statusElement) {
