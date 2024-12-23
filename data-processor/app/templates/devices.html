@@ -1,41 +1,39 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Devices</title>
+    <title>Устройства</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body class="bg-light">
     <div class="container mt-5">
-        <h1 class="text-center mb-4">Devices</h1>
+        <h1 class="text-center mb-4">Устройства</h1>
         <table class="table table-striped">
             <thead>
                 <tr>
-                    <th>Device</th>
-                    <th>Status</th>
-                    <th>Command</th>
+                    <th>Устройство</th>
+                    <th>Статус</th>
+                    <th>Команда</th>
+                    <th>Действие</th>
                 </tr>
             </thead>
             <tbody>
                 {% for device in devices %}
-                <tr>
+                <tr id="row-{{ device[1] }}">
                     <td>{{ device[1] }}</td>
                     <td id="status-{{ device[1] }}">{{ device[2] }}</td>
                     <td>
-                        <select id="command-{{ device[1] }}" class="form-select">
+                        <select id="command-{{ device[1] }}" class="form-select" onchange="toggleMessageInput('{{ device[1] }}')">
                             <option value="turn_on">Включить</option>
                             <option value="turn_off">Выключить</option>
-                            <option value="restart">Перезапустить</option>
-                            <option value="send-message">Отправить сообщение</option>
+                            <option value="send_message">Отправить сообщение</option>
                         </select>
                         <input type="text" id="message-{{ device[1] }}" class="form-control mt-2" placeholder="Введите сообщение" style="display: none;">
                         <button class="btn btn-primary mt-2" onclick="sendCommand('{{ device[1] }}')">Отправить команду</button>
                     </td>
                     <td>
-                        <!-- Иконка корзины -->
-                        <img src="i.webp" alt="Удалить устройство" class="icon" style="cursor: pointer; width: 30px;" 
-                            onclick="deleteDevice('{{ device[1] }}')" title="Удалить устройство">
+                        <img src="https://docs.qgis.org/2.18/de/_images/mActionDeleteSelected.png" alt="Удалить устройство" style="cursor: pointer; width: 30px;" onclick="deleteDevice('{{ device[1] }}')" title="Удалить устройство">
                     </td>
                 </tr>
                 {% endfor %}
@@ -43,13 +41,21 @@
         </table>
     </div>
 
-    <!-- JavaScript -->
     <script>
-        function sendCommand(deviceId) {
+        function toggleMessageInput(deviceId) {
             const command = document.getElementById(`command-${deviceId}`).value;
             const messageInput = document.getElementById(`message-${deviceId}`);
-            const message = messageInput ? messageInput.value : '';
-    
+            if (command === 'send_message') {
+                messageInput.style.display = 'block';
+            } else {
+                messageInput.style.display = 'none';
+            }
+        }
+
+        function sendCommand(deviceId) {
+            const command = document.getElementById(`command-${deviceId}`).value;
+            const message = document.getElementById(`message-${deviceId}`).value;
+
             fetch('/send-command', {
                 method: 'POST',
                 headers: {
@@ -63,17 +69,41 @@
                     alert(`Ошибка: ${data.error}`);
                 } else {
                     alert(`Команда отправлена: ${data.command}`);
-                    // Обновляем статус устройства на странице
                     updateDeviceStatusOnPage(deviceId, data.new_status);
                 }
             })
             .catch(err => console.error('Ошибка:', err));
         }
-    
+
         function updateDeviceStatusOnPage(deviceId, newStatus) {
             const statusElement = document.getElementById(`status-${deviceId}`);
             if (statusElement) {
                 statusElement.textContent = newStatus;
+            }
+        }
+
+        function deleteDevice(deviceId) {
+            if (confirm(`Вы уверены, что хотите удалить устройство ${deviceId}?`)) {
+                fetch('/delete-device', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ device_id: deviceId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(`Ошибка: ${data.error}`);
+                    } else {
+                        alert(`Устройство удалено: ${data.device_id}`);
+                        const row = document.getElementById(`row-${deviceId}`);
+                        if (row) {
+                            row.remove();
+                        }
+                    }
+                })
+                .catch(err => console.error('Ошибка:', err));
             }
         }
     </script>

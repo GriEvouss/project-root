@@ -116,15 +116,47 @@ def send_command():
     if not device_id or not command:
         return jsonify({"error": "Missing device_id or command"}), 400
 
+    new_status = ""
     # Логика обработки команд
-    if command == "send-message":
+    if command == "turn_on":
+        new_status = "active"
+    elif command == "turn_off":
+        new_status = "inactive"
+    elif command == "send_message":
         if not message:
-            return jsonify({"error": "Message is required for 'send-message' command"}), 400
-        client.publish(f"industrial/{device_id}/message", message)
+            return jsonify({"error": "Message is required for 'send_message' command"}), 400
+        # Сохраняем сообщение в базу данных
+        try:
+            conn = psycopg2.connect(DATABASE_URL)
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO messages (device_id, content) VALUES (%s, %s)", (device_id, message))
+            conn.commit()
+            cursor.close()
+            conn.close()
+        except Exception as e:
+            return jsonify({"error": str(e)}), 500
     else:
-        client.publish(f"industrial/{device_id}/command", command)
+        return jsonify({"error": "Invalid command"}), 400
 
-    return jsonify({"status": "Command sent", "device_id": device_id, "command": command, "message": message})
+    # Обновляем статус устройства
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            UPDATE devices
+            SET status = %s, last_updated = NOW()
+            WHERE device_id = %s
+            """,
+            (new_status, device_id)
+        )
+        conn.commit()
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"status": "Command sent", "device_id": device_id, "command": command, "new_status": new_status})
 
 @app.route('/delete-device', methods=['POST'])
 def delete_device():
