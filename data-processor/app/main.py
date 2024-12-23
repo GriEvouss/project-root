@@ -46,11 +46,18 @@ client.loop_start()
 def index():
     conn = psycopg2.connect(DATABASE_URL)
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM devices;")
-    devices = cursor.fetchall()
+
+    # Считаем количество устройств
+    cursor.execute("SELECT COUNT(*) FROM devices;")
+    device_count = cursor.fetchone()[0]
+
+    # Считаем сообщения в базе
+    cursor.execute("SELECT COUNT(*) FROM messages;")
+    message_count = cursor.fetchone()[0]
+
     cursor.close()
     conn.close()
-    return render_template('devices.html', devices=devices)
+    return render_template('index.html', device_count=device_count, message_count=message_count)
 
 @app.route('/send-command', methods=['POST'])
 def send_command():

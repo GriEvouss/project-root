@@ -3,21 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Messages</title>
+    <title>Cloud Industrial Management</title>
 </head>
 <body>
-    <h1>Messages from MQTT</h1>
-    <table border="1">
-        <tr>
-            <th>ID</th>
-            <th>Message</th>
-        </tr>
-        {% for message in messages %}
-        <tr>
-            <td>{{ message[0] }}</td>
-            <td>{{ message[1] }}</td>
-        </tr>
-        {% endfor %}
-    </table>
+    <h1>Welcome to the Industrial Cloud Management System</h1>
+    <p>This system allows you to manage and monitor industrial devices remotely.</p>
+    <p>Total Devices: {{ device_count }}</p>
+    <p>Total Messages: {{ message_count }}</p>
+    <nav>
+        <ul>
+            <li><a href="/devices">View and Manage Devices</a></li>
+            <li><a href="/messages">View Device Messages</a></li>
+        </ul>
+    </nav>
 </body>
 </html>
