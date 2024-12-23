@@ -15,16 +15,16 @@ jobs:
 
     - name: Build Docker images
       run: |
-        docker build -t mqtt-broker-b ./mqtt
-        docker build -t data-processor-b ./data-processor
+        docker build -t mqtt-broker ./mqtt
+        docker build -t data-processor ./data-processor
 
     - name: Login to Docker Hub
       run: |
-        echo "${{tu80rggreen}}" | docker login -u lynxwd --password-stdin
+        echo "${{tu80rggreen}}" | docker login -u "${{lynxwd}}" --password-stdin
 
     - name: Push to Docker Hub
       run: |
         docker tag mqtt-broker lynxwd/mqtt-broker:latest
         docker tag data-processor lynxwd/data-processor:latest
-        docker push lynxwd/mqtt-broker-b:latest
-        docker push lynxwd/data-processor-b:latest
+        docker push lynxwd/mqtt-broker:latest
+        docker push lynxwd/data-processor:latest
