@@ -107,10 +107,41 @@ def messages():
 @app.route('/send-command', methods=['POST'])
 def send_command():
     data = request.json
-    device_id = data['device_id']
-    command = data['command']
-    client.publish(f"industrial/{device_id}/command", command)
-    return jsonify({"status": "Command sent", "device_id": device_id, "command": command})
+    device_id = data.get('device_id')
+    command = data.get('command')
+    message = data.get('message', '')  # По умолчанию пустое сообщение
+
+    if not device_id or not command:
+        return jsonify({"error": "Missing device_id or command"}), 400
+
+    # Логика обработки команд
+    if command == "send-message":
+        if not message:
+            return jsonify({"error": "Message is required for 'send-message' command"}), 400
+        client.publish(f"industrial/{device_id}/message", message)
+    else:
+        client.publish(f"industrial/{device_id}/command", command)
+
+    return jsonify({"status": "Command sent", "device_id": device_id, "command": command, "message": message})
+
+@app.route('/delete-device', methods=['POST'])
+def delete_device():
+    data = request.json
+    device_id = data.get('device_id')
+
+    if not device_id:
+        return jsonify({"error": "Device ID is required"}), 400
+
+    try:
+        conn = psycopg2.connect(DATABASE_URL)
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM devices WHERE device_id = %s;", (device_id,))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"status": "Device deleted", "device_id": device_id}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000)

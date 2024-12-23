@@ -5,18 +5,98 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Devices</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .icon {
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
+        }
+        .icon:hover {
+            opacity: 0.7;
+        }
+        .delete-icon {
+            color: red;
+            font-size: 20px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        // Функция для отправки команды через AJAX
+        function sendCommand(deviceId) {
+            const command = document.getElementById(`command-${deviceId}`).value;
+            const messageInput = document.getElementById(`message-${deviceId}`);
+            const message = messageInput && messageInput.style.display !== "none" ? messageInput.value : "";
+
+            fetch('/send-command', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    device_id: deviceId,
+                    command: command,
+                    message: message
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(`Error: ${data.error}`);
+                } else {
+                    alert(`Command sent: ${data.command}`);
+                    location.reload(); // Обновляем страницу для отображения нового статуса
+                }
+            })
+            .catch(err => console.error('Error:', err));
+        }
+
+        // Функция для удаления устройства через AJAX
+        function deleteDevice(deviceId) {
+            if (confirm(`Are you sure you want to delete device ${deviceId}?`)) {
+                fetch('/delete-device', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        device_id: deviceId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(`Error: ${data.error}`);
+                    } else {
+                        alert(`Device deleted: ${data.device_id}`);
+                        location.reload(); // Обновляем страницу для отображения изменений
+                    }
+                })
+                .catch(err => console.error('Error:', err));
+            }
+        }
+
+        // Показать поле для ввода сообщения только при выборе команды send-message
+        function toggleMessageInput(deviceId) {
+            const command = document.getElementById(`command-${deviceId}`).value;
+            const messageInput = document.getElementById(`message-${deviceId}`);
+            if (command === "send-message") {
+                messageInput.style.display = "block";
+            } else {
+                messageInput.style.display = "none";
+            }
+        }
+    </script>
 </head>
 <body class="bg-light">
     <div class="container mt-5">
         <h1 class="text-center mb-4">Devices</h1>
-
-        <!-- Таблица устройств -->
         <table class="table table-striped">
             <thead>
                 <tr>
                     <th>Device</th>
                     <th>Status</th>
-                    <th>Change State</th>
+                    <th>Command</th>
+                    <th>Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -25,27 +105,26 @@
                     <td>{{ device[1] }}</td>
                     <td>{{ device[2] }}</td>
                     <td>
-                        <form action="/send-command" method="POST">
-                            <input type="hidden" name="device_id" value="{{ device[1] }}">
-                            <input type="text" name="command" placeholder="Enter command (e.g., turn_on)" class="form-control" required>
-                            <button type="submit" class="btn btn-primary mt-2">Change State</button>
-                        </form>
+                        <!-- Выпадающий список с командами -->
+                        <select id="command-{{ device[1] }}" class="form-select" onchange="toggleMessageInput('{{ device[1] }}')">
+                            <option value="turn_on">Turn On</option>
+                            <option value="turn_off">Turn Off</option>
+                            <option value="restart">Restart</option>
+                            <option value="send-message">Send Message</option>
+                        </select>
+                        <!-- Поле для ввода сообщения (по умолчанию скрыто) -->
+                        <input id="message-{{ device[1] }}" type="text" placeholder="Enter message" class="form-control mt-2" style="display: none;">
+                        <!-- Кнопка отправки -->
+                        <button class="btn btn-primary mt-2" onclick="sendCommand('{{ device[1] }}')">Send Command</button>
+                    </td>
+                    <td>
+                        <!-- Иконка удаления -->
+                        <i class="delete-icon bi bi-trash" onclick="deleteDevice('{{ device[1] }}')" title="Delete Device">🗑️</i>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-        <!-- Список доступных команд -->
-        <div class="container mt-5">
-            <h2>Available Commands</h2>
-            <ul>
-                <li><strong>turn_on</strong>: Activate the device</li>
-                <li><strong>turn_off</strong>: Deactivate the device</li>
-                <li><strong>restart</strong>: Restart the device</li>
-                <li><strong>status_update</strong>: Request status update</li>
-            </ul>
-        </div>
     </div>
 </body>
 </html>
