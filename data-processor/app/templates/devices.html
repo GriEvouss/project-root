@@ -2,31 +2,50 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Devices</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body>
-    <h1>Devices</h1>
-    <table border="1">
-        <tr>
-            <th>ID</th>
-            <th>Status</th>
-            <th>Last Updated</th>
-            <th>Send Command</th>
-        </tr>
-        {% for device in devices %}
-        <tr>
-            <td>{{ device[1] }}</td>
-            <td>{{ device[2] }}</td>
-            <td>{{ device[4] }}</td>
-            <td>
-                <form action="/send-command" method="POST">
-                    <input type="hidden" name="device_id" value="{{ device[1] }}">
-                    <input type="text" name="command" placeholder="Enter command">
-                    <button type="submit">Send</button>
-                </form>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+<body class="bg-light">
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Devices</h1>
+
+        <!-- Таблица устройств -->
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Device</th>
+                    <th>Status</th>
+                    <th>Change State</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for device in devices %}
+                <tr>
+                    <td>{{ device[1] }}</td>
+                    <td>{{ device[2] }}</td>
+                    <td>
+                        <form action="/send-command" method="POST">
+                            <input type="hidden" name="device_id" value="{{ device[1] }}">
+                            <input type="text" name="command" placeholder="Enter command (e.g., turn_on)" class="form-control" required>
+                            <button type="submit" class="btn btn-primary mt-2">Change State</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Список доступных команд -->
+        <div class="container mt-5">
+            <h2>Available Commands</h2>
+            <ul>
+                <li><strong>turn_on</strong>: Activate the device</li>
+                <li><strong>turn_off</strong>: Deactivate the device</li>
+                <li><strong>restart</strong>: Restart the device</li>
+                <li><strong>status_update</strong>: Request status update</li>
+            </ul>
+        </div>
+    </div>
 </body>
 </html>
