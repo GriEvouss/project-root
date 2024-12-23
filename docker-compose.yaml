@@ -10,7 +10,6 @@ services:
       - "9001:9001"
 
   database:
-    database:
     image: postgres:13
     environment:
       POSTGRES_USER: admin
@@ -20,6 +19,7 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
+
 
   data-processor:
     build:
@@ -33,3 +33,4 @@ services:
       DATABASE_URL: postgresql://admin:password@database:5432/industrial_db
     ports:
       - "5000:5000"
+
