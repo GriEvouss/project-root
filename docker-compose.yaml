@@ -2,7 +2,7 @@ version: '3.8'
 services:
   mqtt-broker:
     build:
-      context: .
+      context: ./mqtt
       dockerfile: Dockerfile
     image: mqtt-broker
     ports:
@@ -10,18 +10,21 @@ services:
       - "9001:9001"
 
   database:
+    database:
     image: postgres:13
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: password
       POSTGRES_DB: industrial_db
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "5432:5432"
 
   data-processor:
     build:
-      context: .
-      dockerfile: Dockerfile-python
+      context: ./data-processor
+      dockerfile: Dockerfile
     depends_on:
       - mqtt-broker
       - database

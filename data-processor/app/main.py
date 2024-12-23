@@ -1,4 +1,5 @@
 import paho.mqtt.client as mqtt
+from flask import Flask, jsonify
 import psycopg2
 
 # Настройки MQTT
@@ -30,4 +31,22 @@ client.subscribe(MQTT_TOPIC)
 
 # Бесконечный цикл
 client.loop_forever()
-  
+
+app = Flask(__name__)
+
+def get_messages():
+    conn = psycopg2.connect("dbname=industrial_db user=admin password=password host=database")
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM messages;")
+    rows = cur.fetchall()
+    cur.close()
+    conn.close()
+    return rows
+
+@app.route('/messages', methods=['GET'])
+def messages():
+    data = get_messages()
+    return jsonify(data)
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000)
