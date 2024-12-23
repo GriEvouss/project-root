@@ -6,25 +6,25 @@ on:
       - main
 
 jobs:
-  build:
+  build-and-push:
     runs-on: ubuntu-latest
 
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Build Docker images
-      run: |
-        docker build -t mqtt-broker ./mqtt
-        docker build -t data-processor ./data-processor
-
-    - name: Login to Docker Hub
+    - name: Log in to Docker Hub
       run: |
         echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
 
-    - name: Push to Docker Hub
+    - name: Build and push MQTT broker image
       run: |
-        docker tag mqtt-broker your-dockerhub-username/mqtt-broker:latest
-        docker tag data-processor your-dockerhub-username/data-processor:latest
-        docker push your-dockerhub-username/mqtt-broker:latest
-        docker push your-dockerhub-username/data-processor:latest
+        docker build -t lynxwd/mqtt-broker ./mqtt
+        docker tag lynxwd/mqtt-broker lynxwd/mqtt-broker:latest
+        docker push lynxwd/mqtt-broker:latest
+
+    - name: Build and push Data Processor image
+      run: |
+        docker build -t lynxwd/data-processor ./data-processor
+        docker tag lynxwd/data-processor lynxwd/data-processor:latest
+        docker push lynxwd/data-processor:latest
