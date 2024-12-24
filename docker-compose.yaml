@@ -1,32 +1,30 @@
 version: '3.8'
 
 services:
-  mqtt-broker:
+  server:
     build:
-      context: ./mqtt
-    ports:
-      - "1883:1883"
-
-  database:
-    image: postgres:13
-    environment:
-      POSTGRES_USER: admin
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: industrial_db
-    volumes:
-      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
-
-
-  data-processor:
-    build:
-      context: ./data-processor
-    depends_on:
-      - mqtt-broker
-      - database
-    environment:
-      MQTT_BROKER: mqtt-broker
-      DATABASE_URL: postgresql://admin:password@database:5432/industrial_db
+      context: ./server
     ports:
       - "5000:5000"
+    volumes:
+      - ./server:/app
+    depends_on:
+      - nat_emulator
+
+  nat_emulator:
+    build:
+      context: ./nat_emulator
+    ports:
+      - "5003:5003"
+
+  client_behind_nat:
+    build:
+      context: ./clients/client_behind_nat
+    depends_on:
+      - nat_emulator
+
+  client_public:
+    build:
+      context: ./clients/client_public
+    depends_on:
+      - nat_emulator
